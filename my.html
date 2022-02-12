@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background: #333333;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="canvas-line">
+        <canvas id="canvas"></canvas>
+        <h1 id="headline">海星吧牛逼</h1>
+    </div>
+    <script lang="js">
+        var canvas = document.querySelector('#canvas');
+        var headline = document.querySelector('#headline')
+        var ctx = canvas.getContext('2d');
+        var particles = [];
+        var amount = 0;
+        var mouse = {
+            x: 0,
+            y: 0
+        }
+        var radius = 1;
+        var vw = canvas.width = window.innerWidth;
+        var vh = canvas.height = window.innerHeight;
+        function Particle(x, y) {
+            this.x = Math.random() * vw;
+            this.y = Math.random() * vh;
+            this.dest = {
+                x: x,
+                y: y
+            }
+            this.r = Math.random() * 2 * Math.PI;
+            this.vx = (Math.random() - 0.5) * 25;
+            this.vy = (Math.random() - 0.5) * 25;
+            this._x = 0;
+            this._y = 0;
+            this.friction = Math.random() * 0.025 + 0.95;
+            this.color = colorRandom()
+        }
+        Particle.prototype.render = function () {
+            this._x = (this.dest.x - this.x) / 1000;
+            this._y = (this.dest.y - this.y) / 1000;
+            this.vx += this._x;
+            this.vy += this._y;
+            this.vx *= this.friction;
+            this.vy *= this.friction;
+            this.x += this.vx;
+            this.y += this.vy;
+
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.r, Math.PI * 2, false);
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            ctx.shadowBlur = 1;
+            ctx.shadowColor = colorRandom();
+
+
+            ctx.fill();
+            let a = this.x - mouse.x;
+            let b = this.y - mouse.x;
+            let distance = Math.sqrt(a * a + b * b);
+            if (distance < (radius * 30)) {
+                this._x = (this.x - mouse.x) / 100;
+                this._y = (this.y - mouse.y) / 100;
+                this.vx += this._x;
+                this.vy += this._y;
+            }
+        }
+        function onMouseMove(e) {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        }
+        function initScene() {
+            vw = canvas.width = window.innerWidth;
+            vh = canvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = 'bold 16vw fantasy';
+            ctx.textAlign = 'center';
+            ctx.fillText(headline.innerHTML, vw / 2, vh / 1.6);
+            let data = ctx.getImageData(0, 0, vw, vh).data;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'screnn';
+            particles = [];
+            for (let i = 0; i < vw; i += Math.round(vw / 200)) {
+                for (let j = 0; j < vh; j += Math.round(vw / 200)) {
+                    if (data[((i + j * vw) * 4) + 3] > 200) {
+                        particles.push(new Particle(i, j))
+                    }
+                }
+            }
+            amount = particles.length;
+        }
+        function go() {
+            requestAnimationFrame(go);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < amount; i++) {
+                particles[i].render();
+            }
+        }
+        function colorRandom() {
+            return "#" + (color => {
+                return new Array(7 - color.length).join('0') + color
+            })((Math.random() * 0x1000000 << 0).toString(16))
+        }
+        window.addEventListener('resize', initScene)
+        window.addEventListener('mousemove', onMouseMove)
+        initScene();
+        requestAnimationFrame(go)
+
+    </script>
+
+</body>
+
+</html>
